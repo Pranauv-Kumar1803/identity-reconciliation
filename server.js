@@ -7,6 +7,8 @@ import {
   getUsers,
   initDB,
   insertUser,
+  getUsersByLinkedId,
+  updateUser,
 } from "./database/init.js";
 
 const app = express();
@@ -231,14 +233,18 @@ app.post("/identify", (req, res) => {
 
     // console.log(emailPhoneContacts, "email present");
 
-    insertUser({
-      email,
-      phoneNumber,
-      linkedId: isPrimary ? emailPhoneContacts.id : emailPhoneContacts.linkedId, // if found email contact is primary - then use its id otherwise use its linkedid
-      linkPrecedence: "secondary",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    if (!_.isNil(phoneNumber)) {
+      insertUser({
+        email,
+        phoneNumber,
+        linkedId: isPrimary
+          ? emailPhoneContacts.id
+          : emailPhoneContacts.linkedId, // if found email contact is primary - then use its id otherwise use its linkedid
+        linkPrecedence: "secondary",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
     const secondaryContacts = getUsersByLinkedId(
       isPrimary ? emailPhoneContacts.id : emailPhoneContacts.linkedId
@@ -282,14 +288,18 @@ app.post("/identify", (req, res) => {
 
     // console.log(phonePhoneContacts, "phone present");
 
-    insertUser({
-      email,
-      phoneNumber,
-      linkedId: isPrimary ? phonePhoneContacts.id : phonePhoneContacts.linkedId, // if found email contact is primary - then use its id otherwise use its linkedid
-      linkPrecedence: "secondary",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    if (!_.isEmpty(email)) {
+      insertUser({
+        email,
+        phoneNumber,
+        linkedId: isPrimary
+          ? phonePhoneContacts.id
+          : phonePhoneContacts.linkedId, // if found email contact is primary - then use its id otherwise use its linkedid
+        linkPrecedence: "secondary",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
     const secondaryContacts = getUsersByLinkedId(
       isPrimary ? phonePhoneContacts.id : phonePhoneContacts.linkedId
