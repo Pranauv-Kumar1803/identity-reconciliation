@@ -52,6 +52,108 @@ app.post("/identify", (req, res) => {
         secondaryContactIds: [],
       },
     });
+  } else if (exists(phoneContact) && exists(emailContact)) {
+    // to do
+  } else if (!exists(phoneContact) && emailContact) {
+    // here inside when phone contact doesn't exist but email contact does
+    let isPrimary = false;
+    let emailPhoneContacts;
+
+    emailPhoneContacts = _.filter(
+      emailContact,
+      (d) => d.linkPrecedence == "primary"
+    )[0];
+
+    // doing this because the found email contact can be a primary or secondary
+    if (emailPhoneContacts) {
+      isPrimary = true;
+    } else {
+      emailPhoneContacts = emailContact[0];
+    }
+
+    // console.log(emailPhoneContacts, "email present");
+
+    insertUser({
+      email,
+      phoneNumber,
+      linkedId: isPrimary ? emailPhoneContacts.id : emailPhoneContacts.linkedId, // if found email contact is primary - then use its id otherwise use its linkedid
+      linkPrecedence: "secondary",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const secondaryContacts = getUsersByLinkedId(
+      isPrimary ? emailPhoneContacts.id : emailPhoneContacts.linkedId
+    );
+
+    const primaryContact = getUserById(
+      isPrimary ? emailPhoneContacts.id : emailPhoneContacts.linkedId
+    );
+
+    return res.json({
+      contact: {
+        primaryContatctId: primaryContact.id,
+        emails: [
+          primaryContact.email,
+          ..._.uniq(_.map(secondaryContacts, (d) => d.email)),
+        ],
+        phoneNumbers: [
+          primaryContact.phoneNumber,
+          ..._.uniq(_.map(secondaryContacts, (d) => d.phoneNumber)),
+        ],
+        secondaryContactIds: _.map(secondaryContacts, (d) => d.id),
+      },
+    });
+  } else if (!exists(emailContact) && exists(phoneContact)) {
+    // here inside when email contact doesn't exist but phone contact does
+
+    let isPrimary = false;
+    let phonePhoneContacts;
+
+    phonePhoneContacts = _.filter(
+      phoneContact,
+      (d) => d.linkPrecedence == "primary"
+    )[0];
+
+    // doing this because the found email contact can be a primary or secondary
+    if (phonePhoneContacts) {
+      isPrimary = true;
+    } else {
+      phonePhoneContacts = phoneContact[0];
+    }
+
+    // console.log(phonePhoneContacts, "phone present");
+
+    insertUser({
+      email,
+      phoneNumber,
+      linkedId: isPrimary ? phonePhoneContacts.id : phonePhoneContacts.linkedId, // if found email contact is primary - then use its id otherwise use its linkedid
+      linkPrecedence: "secondary",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const secondaryContacts = getUsersByLinkedId(
+      isPrimary ? phonePhoneContacts.id : phonePhoneContacts.linkedId
+    );
+    const primaryContact = getUserById(
+      isPrimary ? phonePhoneContacts.id : phonePhoneContacts.linkedId
+    );
+
+    return res.json({
+      contact: {
+        primaryContatctId: primaryContact.id,
+        emails: [
+          primaryContact.email,
+          ..._.uniq(_.map(secondaryContacts, (d) => d.email)),
+        ],
+        phoneNumbers: [
+          primaryContact.phoneNumber,
+          ..._.uniq(_.map(secondaryContacts, (d) => d.phoneNumber)),
+        ],
+        secondaryContactIds: _.map(secondaryContacts, (d) => d.id),
+      },
+    });
   }
 
   return res.status(200).send("identify request default response");
