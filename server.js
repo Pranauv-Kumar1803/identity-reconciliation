@@ -36,6 +36,10 @@ app.post("/identify", (req, res) => {
 
   // when both phone and email does not exist
   if (!exists(emailContact) && !exists(phoneContact)) {
+    if (_.isEmpty(email) || _.isNil(phoneNumber)) {
+      return res.status(400).send("email and phone have to be non null");
+    }
+
     const newContact = insertUser({
       phoneNumber,
       email,
